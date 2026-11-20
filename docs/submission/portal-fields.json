@@ -48,11 +48,11 @@
     {
       "type": "GitHub Repository",
       "title": "Public source and finalized receipts",
-      "url": "https://github.com/JWattjr/refund-court"
+      "url": "https://github.com/Leokings/refund-court"
     }
   ],
   "status": "DRAFT_VERIFIED_NOT_SUBMITTED",
   "website": "https://refund-court.vercel.app",
-  "repository": "https://github.com/JWattjr/refund-court",
+  "repository": "https://github.com/Leokings/refund-court",
   "submitted": false
 }

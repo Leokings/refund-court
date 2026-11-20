@@ -5,7 +5,7 @@
 web
 
 ## Stack
-User specified Next.js App Router, strict TypeScript, Vercel remote build in wattxs-projects; GenLayer StudioNet 61999 and x402 on Base Sepolia.
+User specified Next.js App Router, strict TypeScript, Vercel remote build; GenLayer StudioNet 61999 and x402 on Base Sepolia.
 
 ## Users
 AI agent builders buying API calls; API sellers posting enforceable promises; Internet Court mission reviewers inspecting live evidence without a wallet.

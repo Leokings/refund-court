@@ -677,7 +677,7 @@
   },
   "recordedAt": "2026-11-12T19:28:07.625212+00:00",
   "website": "https://refund-court.vercel.app",
-  "github": "https://github.com/JWattjr/refund-court",
+  "github": "https://github.com/Leokings/refund-court",
   "approvedDepositBudgetWei": 63,
   "funding": {
     "sourceAccount": "moment-grid-studionet",
@@ -706,5 +706,5 @@
     "injection": "case-3"
   },
   "verifiedAt": "2026-11-12T20:47:43.820325+00:00",
-  "sourceCommit": "2511000755caad6507f8e62ea4d92dc10d26f344"
+  "sourceCommit": "47225abdc36bf9eff9a10aead0f635924eb28fc5"
 }

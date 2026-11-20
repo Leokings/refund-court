@@ -8,7 +8,7 @@ key='0x'+accounts()[0].key.hex().removeprefix('0x')
 local=ROOT/'.env.local'
 lines=[line for line in local.read_text().splitlines() if not line.startswith('SELLER_PRIVATE_KEY=')] if local.exists() else []
 local.write_text('\n'.join(lines+['SELLER_PRIVATE_KEY='+key])+'\n')
-result=subprocess.run(['powershell','-NoProfile','-Command','vercel env add SELLER_PRIVATE_KEY production --sensitive --scope wattxs-projects'],input=key,text=True,capture_output=True,cwd=ROOT)
+result=subprocess.run(['powershell','-NoProfile','-Command','vercel env add SELLER_PRIVATE_KEY production --sensitive'+(' --scope '+__import__('os').environ['VERCEL_SCOPE'] if __import__('os').environ.get('VERCEL_SCOPE') else '')],input=key,text=True,capture_output=True,cwd=ROOT)
 print(result.stdout)
 print(result.stderr)
 raise SystemExit(result.returncode)

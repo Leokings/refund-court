@@ -1,6 +1,6 @@
 # Verified live proof
 
-[App](https://refund-court.vercel.app) · [Public source](https://github.com/JWattjr/refund-court)
+[App](https://refund-court.vercel.app) · [Public source](https://github.com/Leokings/refund-court)
 
 Verified at 2026-11-12T20:47:43.820325+00:00. All six required live cases have finalized. Native refunds are credited and reconciled on chain.
 
