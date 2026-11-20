@@ -1,0 +1,39 @@
+{
+  "01-hook": {
+    "file": "audio/vo-01-hook.mp3",
+    "seconds": 3.578776
+  },
+  "02-problem": {
+    "file": "audio/vo-02-problem.mp3",
+    "seconds": 3.604898
+  },
+  "03-how": {
+    "file": "audio/vo-03-how.mp3",
+    "seconds": 7.418776
+  },
+  "04-judge": {
+    "file": "audio/vo-04-judge.mp3",
+    "seconds": 5.746939
+  },
+  "05-live": {
+    "file": "audio/vo-05-live.mp3",
+    "seconds": 7.967347
+  },
+  "06-skill": {
+    "file": "audio/vo-06-skill.mp3",
+    "seconds": 2.403265
+  },
+  "07-cta": {
+    "file": "audio/vo-07-cta.mp3",
+    "seconds": 2.925714
+  },
+  "_texts": {
+    "01-hook": "Your agent pays an API. The answer comes back wrong.",
+    "02-problem": "With x402, that money is gone. No chargeback.",
+    "03-how": "Refund Court adds one. The seller signs every response and backs its promise with a USDC bond on Base.",
+    "04-judge": "GenLayer validators check each promise against the signed response, quoting it word for word.",
+    "05-live": "Live: a stale reading got its USDC back. An honest one didn't. One told the judge to pass it. Refunded anyway.",
+    "06-skill": "Any agent can use it with one skill.",
+    "07-cta": "Refund Court. Chargebacks for agents."
+  }
+}

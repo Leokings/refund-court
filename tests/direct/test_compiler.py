@@ -17,10 +17,17 @@ def test_compile_requires_independent_acceptance_and_finality(direct_vm,direct_d
     criteria=['Temperature is in Celsius.','Requested city matches.'] if accepted else []
     vm.mock_llm(r'.*Compile one seller.*',json.dumps({'accepted':accepted,'criteria':criteria,'reason':'Observable criteria' if accepted else 'Subjective promise'}))
     vm.mock_llm(r'.*Review the two.*',json.dumps({'equivalent':True}))
-    c.register('https://refund-court.vercel.app/api/weather/honest','Returns weather for the requested city with Celsius units.',1000,5)
+    c.register('https://refund-court.example/api/weather/honest','Returns weather for the requested city with Celsius units.',1000,1000)
     assert vm.run_validator()
     assert not vm.run_validator(leader_result={'accepted':not accepted,'criteria':criteria,'reason':'different'})
     assert json.loads(c.get_service('service-1'))['status']=='COMPILING'
     selfcall(vm,c.finalize_register,'service-1')
     record=json.loads(c.get_service('service-1'))
     assert record['status']==('FROZEN' if accepted else 'REJECTED') and len(record['hash'])==64
+
+
+def test_terms_must_be_a_full_usdc_refund(direct_vm,direct_deploy,direct_owner):
+    direct_vm.sender=direct_owner
+    c=direct_deploy('contracts/service_promise.py')
+    with direct_vm.expect_revert('full 0.001 USDC refund'):
+        c.register('https://refund-court.example/api/weather/honest','Returns weather for the requested city with Celsius units.',1000,5)

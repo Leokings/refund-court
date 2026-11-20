@@ -1,4 +1,12 @@
-"""Resumable stages. Never approves a deposit or invents a payment receipt."""
+"""Resumable GenLayer stages for the v2 live demo. Never invents a payment or payout receipt.
+
+  python scripts/release.py deploy           # ServicePromise, then RefundCourt(registry, escrow)
+  python scripts/release.py compile          # four promises: one subjective, three observable
+  python scripts/release.py file <mode>      # file the paid evidence and judge it (honest|broken|injection)
+  python scripts/release.py payout <mode>    # record the Base refund for a REFUND case
+  python scripts/release.py reject           # replay and forgery attempts, both rejected by code
+  python scripts/release.py record           # re-read every service and case
+"""
 import hashlib
 import json
 import sys
@@ -8,108 +16,53 @@ from chain import ROOT,load,save,tx,read,accounts
 p=load()
 stage=sys.argv[1] if len(sys.argv)>1 else 'record'
 def address(name):return p['contracts'][name]['address']
+PROMISE='Returns live weather for the requested city, temperature in Celsius, with observed_at no older than one hour before delivered_at.'
 
 if stage=='deploy':
-    if not any(x.get('reachable') for x in p.get('probes',{}).values()):raise RuntimeError('Validator Base RPC probe must pass first')
+    escrow=p.get('base',{}).get('escrow',{}).get('address')
+    if not escrow:raise RuntimeError('Deploy RefundEscrow on Base first: npx tsx scripts/base.ts deploy')
     for name,filename in [('ServicePromise','service_promise.py'),('RefundCourt','refund_court.py')]:
         source=(ROOT/'contracts'/filename).read_text()
         digest=hashlib.sha256(source.encode()).hexdigest()
         if name in p['contracts']:
             if p['contracts'][name]['sha256']!=digest:raise RuntimeError('Source changed since deployment; use a new release manifest')
             continue
-        r=tx(p,'deploy-'+name,code=source,args=[] if name=='ServicePromise' else [address('ServicePromise')])
+        r=tx(p,'deploy-'+name,code=source,args=[] if name=='ServicePromise' else [address('ServicePromise'),escrow])
         p['contracts'][name]={'address':r.get('recipient',r.get('to_address')),'source':filename,'sha256':digest}
         save(p)
 elif stage=='compile':
     base=p['website'].rstrip('/')
-    for mode,promise in [('subjective','Returns the most beautiful and delightful weather report in the world.'),('honest','Returns a demo weather report for the requested city, temperature in Celsius, with observed_at no older than one hour before delivered_at.'),('broken','Returns a demo weather report for the requested city, temperature in Celsius, with observed_at no older than one hour before delivered_at.'),('injection','Returns a demo weather report for the requested city, temperature in Celsius, with observed_at no older than one hour before delivered_at.')]:
-        tx(p,'compile-'+mode,address('ServicePromise'),'register',[base+'/api/weather/'+('honest' if mode=='subjective' else mode),promise,1000,5])
-    print('Compilation finalized. Run record.',flush=True)
-elif stage=='bond':
-    for key in read(address('ServicePromise'),'get_ids',[0,50]):
-        service=read(address('ServicePromise'),'get_service',[key])
-        if service['status']!='FROZEN':continue
-        tx(p,'prepare-'+key,address('RefundCourt'),'prepare_bond',[key])
-        tx(p,'bond-'+key,address('RefundCourt'),'deposit_bond',[key],value=20)
+    for mode,promise in [('subjective','Returns the most beautiful and delightful weather report in the world.'),('honest',PROMISE),('broken',PROMISE),('injection',PROMISE)]:
+        tx(p,'compile-'+mode,address('ServicePromise'),'register',[base+'/api/weather/'+('honest' if mode=='subjective' else mode),promise,1000,1000])
+    print('Compilation finalized. Run record, then: npx tsx scripts/base.ts bond',flush=True)
 elif stage=='file':
     mode=sys.argv[2]
     artifact=json.loads((ROOT/'deploy/payments'/(mode+'.json')).read_text())
     service=next(s for s in p['services'] if s['endpoint'].endswith('/'+mode) and s['status']=='FROZEN')
     args=[service['id'],artifact['payment_hash'],artifact['request'],artifact['response'],artifact['signature']]
-    tx(p,'reserve-'+mode,address('RefundCourt'),'reserve_claim',args,index=1)
+    tx(p,'file-'+mode,address('RefundCourt'),'file_claim',args,index=1)
     ids=read(address('RefundCourt'),'get_ids',[0,50])
     cid=next(k for k in ids if read(address('RefundCourt'),'get_case',[k])['payment_hash']==artifact['payment_hash'])
-    p.setdefault('caseIds',{})[mode]=cid;save(p)
-    tx(p,'fee-'+mode,address('RefundCourt'),'deposit_fee',[cid],index=1,value=1)
+    p.setdefault('caseIds',{})[mode]=cid;p.setdefault('caseModes',{})[cid]=mode;save(p)
     tx(p,'judge-'+mode,address('RefundCourt'),'judge_claim',[cid],index=1)
-elif stage=='file-remaining':
-    modes=['honest','injection']
-    jobs=[]
-    for mode in modes:
-        artifact=json.loads((ROOT/'deploy/payments'/(mode+'.json')).read_text())
-        service=next(s for s in p['services'] if s['endpoint'].endswith('/'+mode) and s['status']=='FROZEN')
-        args=[service['id'],artifact['payment_hash'],artifact['request'],artifact['response'],artifact['signature']]
-        jobs.append((mode,artifact,args))
-        tx(p,'reserve-'+mode,address('RefundCourt'),'reserve_claim',args,index=1,wait=False)
-    for mode,artifact,args in jobs:
-        tx(p,'reserve-'+mode,address('RefundCourt'),'reserve_claim',args,index=1)
-        ids=read(address('RefundCourt'),'get_ids',[0,50])
-        cid=next(k for k in ids if read(address('RefundCourt'),'get_case',[k])['payment_hash']==artifact['payment_hash'])
-        p.setdefault('caseIds',{})[mode]=cid;save(p)
-    for mode in modes:
-        tx(p,'fee-'+mode,address('RefundCourt'),'deposit_fee',[p['caseIds'][mode]],index=1,value=1,wait=False)
-    for mode in modes:
-        tx(p,'fee-'+mode,address('RefundCourt'),'deposit_fee',[p['caseIds'][mode]],index=1,value=1)
-    for mode in modes:
-        tx(p,'judge-'+mode,address('RefundCourt'),'judge_claim',[p['caseIds'][mode]],index=1,wait=False)
-    for mode in modes:
-        tx(p,'judge-'+mode,address('RefundCourt'),'judge_claim',[p['caseIds'][mode]],index=1)
+elif stage=='payout':
+    mode=sys.argv[2];cid=p['caseIds'][mode]
+    payout=p.get('base',{}).get('payouts',{}).get(cid,{}).get('tx')
+    if not payout:raise RuntimeError('Pay the refund on Base first: npx tsx scripts/base.ts refund '+cid)
+    tx(p,'payout-'+mode,address('RefundCourt'),'record_payout',[cid,payout],index=1)
 elif stage=='reject':
     a=json.loads((ROOT/'deploy/payments/broken.json').read_text())
     service=next(s for s in p['services'] if s['endpoint'].endswith('/broken') and s['status']=='FROZEN')
     args=[service['id'],a['payment_hash'],a['request'],a['response'],a['signature']]
-    r=tx(p,'reject-replay',address('RefundCourt'),'reserve_claim',args,index=1,allow_error=True)
+    r=tx(p,'reject-replay',address('RefundCourt'),'file_claim',args,index=1,allow_error=True)
     if not r or r.get('txExecutionResultName')=='SUCCESS':raise RuntimeError('Replay unexpectedly succeeded')
     forged=[service['id'],'0x'+'dd'*32,a['request'],a['response']+' ',a['signature']]
-    tx(p,'reject-forgery',address('RefundCourt'),'reserve_claim',forged,index=1,allow_error=True)
-elif stage=='pull-all':
-    jobs=[]
-    for index in (1,0):
-        owner=accounts()[index].address
-        credit=read(address('RefundCourt'),'get_credit',[owner]);previous=credit.get('pull',{})
-        if previous.get('status')=='PAID' and int(credit['available_wei'])==0:continue
-        attempt=previous.get('attempt',0) if previous.get('status')=='PENDING' else previous.get('attempt',0)+1
-        label='pull-'+str(index)+'-'+str(attempt)
-        jobs.append((index,owner,attempt,label))
-        tx(p,label,address('RefundCourt'),'claim',[attempt],index=index,wait=False)
-    verifications=[]
-    for index,owner,attempt,label in jobs:
-        r=tx(p,label,address('RefundCourt'),'claim',[attempt],index=index)
-        child=(r.get('triggered_transactions') or [None])[0]
-        if not child:raise RuntimeError('No native transfer emitted; reconcile saved parent hash')
-        verifications.append((label,[owner,attempt,p['transactions'][label],child]))
-    for label,args in verifications:
-        tx(p,'verify-'+label,address('RefundCourt'),'verify_claim',args,wait=False)
-    for label,args in verifications:
-        tx(p,'verify-'+label,address('RefundCourt'),'verify_claim',args)
-elif stage=='pull':
-    index=int(sys.argv[2]);owner=accounts()[index].address
-    credit=read(address('RefundCourt'),'get_credit',[owner])
-    previous=credit.get('pull',{})
-    if previous.get('status')=='PAID' and int(credit['available_wei'])==0:
-        print('Native credit already claimed and verified',owner);raise SystemExit(0)
-    attempt=previous.get('attempt',0) if previous.get('status')=='PENDING' else previous.get('attempt',0)+1
-    label='pull-'+str(index)+'-'+str(attempt)
-    r=tx(p,label,address('RefundCourt'),'claim',[attempt],index=index)
-    child=(r.get('triggered_transactions') or [None])[0]
-    if not child:raise RuntimeError('No native transfer emitted')
-    tx(p,'verify-'+label,address('RefundCourt'),'verify_claim',[owner,attempt,p['transactions'][label],child])
+    tx(p,'reject-forgery',address('RefundCourt'),'file_claim',forged,index=1,allow_error=True)
 elif stage!='record':raise SystemExit('Unknown stage')
 
 if p.get('contracts') and len(p['contracts'])==2:
     p['services']=[read(address('ServicePromise'),'get_service',[key]) for key in read(address('ServicePromise'),'get_ids',[0,50])]
-    p['bonds']={s['id']:read(address('RefundCourt'),'get_bond',[s['id']]) for s in p['services']}
     p['claimCases']=[read(address('RefundCourt'),'get_case',[key]) for key in read(address('RefundCourt'),'get_ids',[0,50])]
-    p['credits']={a.address:read(address('RefundCourt'),'get_credit',[a.address]) for a in accounts()}
+    p['demoWallets']=[a.address.lower() for a in accounts()]
     p['recordedAt']=datetime.now(timezone.utc).isoformat()
     save(p)

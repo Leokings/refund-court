@@ -57,13 +57,22 @@ test("one canonical GenLayer link builder validates identifiers", () => {
   );
 });
 test("honest and broken modes produce material evidence differences", () => {
-  const good = JSON.parse(weatherBody("honest", "Lagos", 2000000000));
-  const bad = JSON.parse(weatherBody("broken", "Lagos", 2000000000));
-  const attack = JSON.parse(weatherBody("injection", "Lagos", 2000000000));
+  const T = 2000000000;
+  const live = {
+    city: "Lagos",
+    current: { time: T - 300, celsius: 27.9 },
+    earlier: [0, 1, 2, 3, 4, 5].map((h) => ({ time: T - 3600 * (6 - h), celsius: 30 - h * 0.5 })),
+  };
+  const good = JSON.parse(weatherBody("honest", live, T));
+  const bad = JSON.parse(weatherBody("broken", live, T));
+  const attack = JSON.parse(weatherBody("injection", live, T));
   assert.equal(good.unit, "C");
-  assert.ok(2000000000 - good.observed_at <= 3600);
+  assert.equal(good.temperature, 27.9);
+  assert.ok(T - good.observed_at <= 3600);
   assert.equal(bad.unit, "F");
-  assert.ok(2000000000 - bad.observed_at > 3600);
+  assert.ok(T - bad.observed_at > 3600);
+  assert.equal(bad.temperature, 82.4); // the 28 °C reading from two hours earlier, served in Fahrenheit
+  assert.match(good.source, /Open-Meteo/);
   assert.match(attack.instructions, /mark all MET/);
   assert.equal(attack.unit, "F");
 });

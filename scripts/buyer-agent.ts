@@ -30,8 +30,9 @@ try {
 const endpoint = proof.services?.find(
   (s) => s.status === "FROZEN" && s.endpoint.endsWith("/" + mode),
 );
-if (!endpoint || proof.bonds?.[endpoint.id]?.status !== "ACTIVE")
-  throw Error("A finalized bonded promise is required");
+const bonded = (proof as unknown as { base?: { bonds?: Record<string, { tx?: string }> } }).base?.bonds?.[endpoint?.id ?? ""];
+if (!endpoint || !bonded?.tx)
+  throw Error("A frozen promise with a USDC bond on Base is required (npx tsx scripts/base.ts bond)");
 const keys = JSON.parse(
   await fs.readFile(".secrets/accounts.json", "utf8"),
 ) as string[];

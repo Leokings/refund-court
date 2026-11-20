@@ -17,3 +17,6 @@ test-results/
 .env*
 !.env.example
 .venv/
+
+.vercel
+video/out/

@@ -77,9 +77,9 @@ def tx(proof,label,address=None,method=None,args=None,code=None,index=0,value=0,
         marker = ROOT / '.secrets/ambiguous-broadcast.json'
         if marker.exists(): raise RuntimeError('Reconcile ambiguous submission before any new write')
         c = client(index)
-        fees = {'feeValue':0}
         marker.write_text(json.dumps({'label':label,'address':address,'method':method,'valueWei':value}))
-        h = c.deploy_contract(code,args=args or [],fees=fees) if code is not None else c.write_contract(address,method,args=args or [],value=value,fees=fees)
+        # StudioNet is gasless; genlayer-py 0.18.0 takes no fee argument.
+        h = c.deploy_contract(code,args=args or []) if code is not None else c.write_contract(address,method,args=args or [],value=value)
         h = h.hex() if hasattr(h,'hex') else str(h)
         h = h if h.startswith('0x') else '0x'+h
         proof['transactions'][label] = h

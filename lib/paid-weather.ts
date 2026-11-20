@@ -9,7 +9,7 @@ import {
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { privateKeyToAccount } from "viem/accounts";
 import type { Envelope } from "./domain";
-import { weatherBody, type Mode } from "./weather-mode";
+import { liveWeather, weatherBody, type Mode } from "./weather-mode";
 export async function paidWeather(request: NextRequest, mode: Mode) {
   const key = process.env.SELLER_PRIVATE_KEY;
   if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key))
@@ -51,7 +51,7 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
       {
         url: request.url,
         description:
-          "Signed demo weather; bond-backed fixed 5 wei GEN reimbursement",
+          "Signed live weather (Open-Meteo); a broken promise is refunded in full, in USDC, from the seller's bond",
         mimeType: "application/json",
       },
       error,
@@ -96,6 +96,16 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
   const verified = await server.verifyPayment(payload, matched);
   if (!verified.isValid)
     return challenge(verified.invalidReason ?? "Invalid payment");
+  // Fetch the data before taking payment, so a source outage never charges the buyer.
+  let live;
+  try {
+    live = await liveWeather(city);
+  } catch (e) {
+    return NextResponse.json(
+      { error: (e instanceof Error ? e.message : "Weather source unavailable") + "; no payment was taken." },
+      { status: 503 },
+    );
+  }
   const deliveredAt = Math.floor(Date.now() / 1000);
   const content = {
     request: JSON.stringify({
@@ -105,7 +115,7 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
       delivered_at: deliveredAt,
       nonce,
     }),
-    response: weatherBody(mode, city, deliveredAt),
+    response: weatherBody(mode, live, deliveredAt),
   };
   const payment = await server.settlePayment(payload, matched);
   if (

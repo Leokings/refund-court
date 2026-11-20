@@ -4,6 +4,7 @@ export type TxState =
   | "ACCEPTED"
   | "FINALIZED_SUCCESS"
   | "FINALIZED_ERROR";
+export const usdc = (units: string | number | bigint) => (Number(units) / 1e6).toFixed(3);
 export type TxView = {
   hash: string;
   state: TxState;
@@ -20,26 +21,25 @@ export type Service = {
   reason: string;
   status: string;
   hash: string;
-  refund_wei: string;
+  refund_units: string;
   price_units: string;
-};
-export type Bond = {
-  balance?: string;
-  locked?: string;
-  status?: string;
-  open?: number;
-  deadline?: number;
-  withdraw_after?: number;
 };
 export type Criterion = {
   criterion: string;
   verdict: "MET" | "NOT_MET" | "UNCLEAR";
   quote: string;
 };
+export type BaseCheck = {
+  status?: string;
+  transaction?: string;
+  reason?: string;
+};
 export type CourtCase = {
   id: string;
+  case_key: string;
   service_id: string;
   promise_hash: string;
+  seller: string;
   buyer: string;
   payment_hash: string;
   request: string;
@@ -47,40 +47,37 @@ export type CourtCase = {
   signature: string;
   evidence_sha256: string;
   status: string;
-  deadline: number;
+  outcome?: string;
   verdicts: Criterion[];
-  payment: Record<string, unknown>;
-  refund_wei: string;
-  fee_wei: string;
+  criteria: string[];
+  payment: BaseCheck;
+  payout: BaseCheck;
+  refund_units: string;
+  price_units: string;
   reason: string;
 };
-export type Credit = {
-  available_wei: string;
-  pull: {
-    status?: string;
-    amount?: string;
-    attempt?: number;
-    parent_hash?: string;
-    child_hash?: string;
-    deadline?: number;
-  };
+export type BaseSide = {
+  chainId: number;
+  usdc: string;
+  escrow?: { address?: string; deployTx?: string; relayer?: string; setCourtTx?: string };
+  bonds?: Record<string, { tx: string; serviceKey: string; amountUnits: string; seller: string }>;
+  payouts?: Record<string, { tx: string; buyer: string; amountUnits: string; genlayerJudgeTx: string }>;
 };
 export type Proof = {
   network: string;
   chainId: number;
   releaseStatus: string;
+  version?: number;
   website?: string;
   github?: string;
   recordedAt?: string;
-  contracts: Record<
-    string,
-    { address: string; source: string; sha256: string }
-  >;
+  contracts: Record<string, { address: string; source: string; sha256: string }>;
   transactions: Record<string, string>;
   services?: Service[];
-  bonds?: Record<string, Bond>;
   claimCases?: CourtCase[];
-  credits?: Record<string, Credit>;
+  caseIds?: Record<string, string>;
+  caseModes?: Record<string, string>;
+  base?: BaseSide;
   cases: Record<string, unknown>;
   deposits: Record<string, number>;
   demoWallets?: string[];

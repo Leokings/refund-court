@@ -5,15 +5,7 @@ import {
   type TransactionHash,
 } from "genlayer-js/types";
 import source from "@/deploy/proof.json";
-import {
-  transactionState,
-  type Proof,
-  type Service,
-  type Bond,
-  type CourtCase,
-  type TxView,
-  type Credit,
-} from "./domain";
+import { transactionState, type Proof, type Service, type CourtCase, type TxView } from "./domain";
 export const recorded = source as unknown as Proof;
 const chain = createClient({
   chain: studionet,
@@ -62,31 +54,11 @@ export async function snapshot() {
     read<string[]>("RefundCourt", "get_ids", [0, 50]),
   ]);
   const services: Service[] = [],
-    claimCases: CourtCase[] = [],
-    bonds: Record<string, Bond> = {};
+    claimCases: CourtCase[] = [];
   // Bound public RPC load. Cache coalesces concurrent visitor requests.
-  for (const key of serviceIds.slice(-20)) {
-    services.push(await read<Service>("ServicePromise", "get_service", [key]));
-    bonds[key] = await read<Bond>("RefundCourt", "get_bond", [key]);
-  }
-  for (const key of caseIds.slice(-20))
-    claimCases.push(await read<CourtCase>("RefundCourt", "get_case", [key]));
-  const owners = [
-    ...new Set([
-      ...services.map((s) => s.seller),
-      ...claimCases.map((c) => c.buyer),
-    ]),
-  ].slice(0, 8);
-  const credits: Record<string, Credit> = {};
-  for (const owner of owners)
-    credits[owner] = await read<Credit>("RefundCourt", "get_credit", [owner]);
-  return {
-    services,
-    claimCases,
-    bonds,
-    credits,
-    readAt: new Date().toISOString(),
-  };
+  for (const key of serviceIds.slice(-20)) services.push(await read<Service>("ServicePromise", "get_service", [key]));
+  for (const key of caseIds.slice(-20)) claimCases.push(await read<CourtCase>("RefundCourt", "get_case", [key]));
+  return { services, claimCases, readAt: new Date().toISOString() };
 }
 export async function transaction(hash: string): Promise<TxView> {
   if (!/^0x[0-9a-fA-F]{64}$/.test(hash))
