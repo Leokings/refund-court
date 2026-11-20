@@ -2,7 +2,7 @@
 
 45 seconds, 1920×1080. Made from the live product with AI tools:
 
-- **Footage:** real screen captures of the live site, the USDC refund on Basescan and the judgment
+- **Footage:** real screen captures of the live site, the USDC refund on Base (Blockscout) and the judgment
   on the GenLayer explorer, taken by `capture.ts` in a headless browser (`public/shots`).
 - **Voice and music:** ElevenLabs (`voice.ts`, script in `src/voiceover.ts`; `music.ts`).
 - **Motion and edit:** Remotion (`src/RefundCourt.tsx`).

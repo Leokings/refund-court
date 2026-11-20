@@ -162,7 +162,7 @@ function Problem() {
       <div style={{ position: "absolute", top: 420, left: 0, right: 0, display: "flex", justifyContent: "center", alignItems: "center", gap: 60, fontFamily: DISP, fontWeight: 600, fontSize: 64 }}>
         <Card style={{ position: "relative", padding: "30px 50px" }}>🤖 Buyer</Card>
         <div style={{ position: "relative", width: 420, height: 8, background: C.rule, borderRadius: 4 }}>
-          <div style={{ position: "absolute", left: `${t * 85}%`, top: -38, fontFamily: MONO, fontSize: 36, background: C.greenBg, color: C.green, borderRadius: 999, padding: "6px 18px", whiteSpace: "nowrap" }}>0.001 USDC</div>
+          <div style={{ position: "absolute", left: `${8 + t * 30}%`, top: -38, fontFamily: MONO, fontSize: 36, background: C.greenBg, color: C.green, borderRadius: 999, padding: "6px 18px", whiteSpace: "nowrap" }}>0.001 USDC</div>
         </div>
         <Card style={{ position: "relative", padding: "30px 50px" }}>Seller API</Card>
       </div>
@@ -180,7 +180,7 @@ function How() {
       <Caption top={44} size={62}>
         Refund Court adds the <Hi>chargeback</Hi>.
       </Caption>
-      <Shot src="site-hero" url={SITE} frames={[10, 260]} from={[0, 0, 1.0]} to={[60, 30, 1.12]} style={{ left: 110, top: 170, width: 1080, height: 820 }} />
+      <Shot src="site-hero" url={SITE} frames={[10, 260]} from={[400, 60, 1.0]} to={[430, 90, 1.08]} style={{ left: 110, top: 170, width: 1080, height: 820 }} />
       <div style={{ position: "absolute", left: 1250, top: 240, width: 560, display: "flex", flexDirection: "column", gap: 26 }}>
         {steps.map((s, i) => {
           const p = usePop(40 + i * 45);
@@ -204,15 +204,15 @@ function Judge() {
         <Hi bg={C.greenBg}>GenLayer</Hi> validators rule, criterion by criterion.
       </Caption>
       <div style={{ opacity: 1 - swap }}>
-        <Shot src="site-broken" url={SITE + " · broken promise"} frames={[10, 130]} from={[180, 200, 1.25]} to={[180, 330, 1.25]} style={{ left: 210, top: 170, width: 1500, height: 840 }} />
+        <Shot src="site-broken" url={SITE + " · broken promise"} frames={[10, 130]} from={[308, 100, 1.15]} to={[308, 180, 1.15]} style={{ left: 210, top: 170, width: 1500, height: 840 }} />
       </div>
       <div style={{ opacity: swap }}>
-        <Shot src="genlayer-judge" url="explorer-studio.genlayer.com · judgment" frames={[140, 240]} from={[0, 0, 1.0]} to={[80, 120, 1.15]} style={{ left: 210, top: 170, width: 1500, height: 840 }} />
+        <Shot src="genlayer-judge" url="explorer-studio.genlayer.com · judgment" frames={[140, 240]} from={[180, 60, 1.0]} to={[200, 120, 1.08]} style={{ left: 210, top: 170, width: 1500, height: 840 }} />
       </div>
-      <Stamp at={60} color={C.red} bg={C.redBg} x={1330} y={820} size={50}>
+      <Stamp at={60} color={C.red} bg={C.redBg} x={1500} y={930} size={50}>
         Not met
       </Stamp>
-      <Stamp at={170} color={C.green} bg={C.greenBg} x={1300} y={820} size={50} rotate={5}>
+      <Stamp at={170} color={C.green} bg={C.greenBg} x={1480} y={930} size={50} rotate={5}>
         Finalized
       </Stamp>
     </Fade>
@@ -231,7 +231,7 @@ function Live() {
   return (
     <Fade length={S.live[1] - S.live[0]}>
       <Caption top={44} size={62}>
-        Live, on <Hi>real</Hi> payments.
+        Live, <Hi>on-chain</Hi>.
       </Caption>
       <div style={{ opacity: 1 - swap, position: "absolute", left: 260, top: 210, width: 1400, display: "flex", flexDirection: "column", gap: 30 }}>
         {CASES.map(([name, verdict, kind], i) => {
@@ -247,9 +247,12 @@ function Live() {
             </div>
           );
         })}
+        <div style={{ opacity: interpolate(frame, [120, 140], [0, 1], clamp), marginTop: 30, textAlign: "center", fontFamily: MONO, fontSize: 28, lineHeight: 1.5, color: C.muted }}>
+          x402 payment → GenLayer judgment → USDC refund on Base → refund verified on GenLayer
+        </div>
       </div>
       <div style={{ opacity: swap }}>
-        <Shot src="basescan-refund" url="sepolia.basescan.org · USDC refund" frames={[180, 300]} from={[0, 0, 1.0]} to={[60, 120, 1.18]} style={{ left: 260, top: 170, width: 1400, height: 820 }} />
+        <Shot src="base-refund" url="base-sepolia.blockscout.com · USDC refund" frames={[180, 300]} from={[260, 100, 1.0]} to={[280, 170, 1.1]} style={{ left: 260, top: 170, width: 1400, height: 820 }} />
         <Stamp at={210} color={C.green} bg={C.greenBg} x={1230} y={840} size={46} rotate={5}>
           0.001 USDC back
         </Stamp>

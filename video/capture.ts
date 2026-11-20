@@ -60,11 +60,21 @@ await scrollTo(site, "#use");
 await sleep(800);
 await shot(site, "site-use");
 
-// 2. The USDC refund on Basescan.
+// 2. The USDC refund on Base (Blockscout; Basescan blocks headless browsers).
 const refund = p.base.payouts[broken].tx as string;
-const scan = await open(`https://sepolia.basescan.org/tx/${refund}`);
+const scan = await open(`https://base-sepolia.blockscout.com/tx/${refund}`);
 await sleep(2500);
-await shot(scan, "basescan-refund");
+// Hide the explorer's sponsored banner row; nothing else on the page is changed.
+await scan.evaluate(() => {
+  const label = [...document.querySelectorAll("*")].find((e) => e.children.length === 0 && e.textContent?.trim() === "Sponsored");
+  let row = label?.parentElement;
+  while (row && row.parentElement && !row.nextElementSibling?.textContent?.includes("From") && row.getBoundingClientRect().width < 1500) row = row.parentElement;
+  const ad = [...document.querySelectorAll("a, div")].find((e) => /Raffle|Sponsored/.test(e.textContent ?? "") && e.querySelector("img, iframe") && e.getBoundingClientRect().height < 200);
+  label?.closest("div")?.parentElement?.remove();
+  ad?.remove();
+});
+await sleep(500);
+await shot(scan, "base-refund");
 
 // 3. The judgment on the GenLayer explorer.
 const gl = await open(`https://explorer-studio.genlayer.com/tx/${p.transactions["judge-broken"]}`);
