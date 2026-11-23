@@ -9,7 +9,7 @@ Mission: **Internet Court: Partner Demo Lab** · Type: Projects · Partner: **x4
 | Website | https://refund-court-x402.vercel.app |
 | GitHub | https://github.com/Leokings/refund-court |
 | Contract link | https://explorer-studio.genlayer.com/address/0xFB3a0dA4a4c8d1da172ca1064D607fAd2124FAFD |
-| Demo URL (YouTube or X) | _the post with the video_ |
+| Demo URL (YouTube or X) | https://x.com/plain3rd/status/2124914831660888550 |
 
 ## One-liner (147/180)
 
