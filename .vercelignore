@@ -9,4 +9,4 @@ __pycache__
 docs/research
 .venv
 evm/test
-video
+/video
