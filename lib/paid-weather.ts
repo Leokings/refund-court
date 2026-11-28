@@ -8,8 +8,10 @@ import {
 } from "@x402/core/http";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { privateKeyToAccount } from "viem/accounts";
-import type { Envelope } from "./domain";
+import type { Envelope, Proof } from "./domain";
 import { liveWeather, weatherBody, type Mode } from "./weather-mode";
+import { sellerTerms, signedRequest } from "./terms";
+import release from "@/deploy/proof.json";
 export async function paidWeather(request: NextRequest, mode: Mode) {
   const key = process.env.SELLER_PRIVATE_KEY;
   if (!key || !/^0x[0-9a-fA-F]{64}$/.test(key))
@@ -35,6 +37,16 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
     }),
   ).register("eip155:84532", new ExactEvmScheme());
   const path = "/api/weather/" + mode;
+  const endpoint = request.nextUrl.origin + path;
+  // Sell only under the seller's own frozen, bonded promise for this endpoint; those terms are signed
+  // into the evidence, so the buyer can file under them and under nothing else.
+  const proof = release as unknown as Proof;
+  const terms = sellerTerms(proof.services, endpoint, proof.base?.bonds);
+  if (!terms)
+    return NextResponse.json(
+      { error: "This endpoint has no frozen, bonded promise; no payment was requested." },
+      { status: 503 },
+    );
   // Official core APIs implement this JSON-only API route. No wallet/paywall UI
   // is loaded into the resource server or advertised to agent clients.
   await server.initialize();
@@ -50,8 +62,7 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
       requirements,
       {
         url: request.url,
-        description:
-          "Signed live weather (Open-Meteo); a broken promise is refunded in full, in USDC, from the seller's bond",
+        description: `Signed live weather (Open-Meteo); a broken promise is refunded in full, in USDC, from the seller's bond. Terms: ${terms.service_id}, promise ${terms.promise_hash}`,
         mimeType: "application/json",
       },
       error,
@@ -108,12 +119,13 @@ export async function paidWeather(request: NextRequest, mode: Mode) {
   }
   const deliveredAt = Math.floor(Date.now() / 1000);
   const content = {
-    request: JSON.stringify({
-      buyer: authorization.from.toLowerCase(),
+    request: signedRequest({
+      buyer: authorization.from,
       city,
-      endpoint: request.nextUrl.origin + path,
-      delivered_at: deliveredAt,
+      endpoint,
+      deliveredAt,
       nonce,
+      terms,
     }),
     response: weatherBody(mode, live, deliveredAt),
   };

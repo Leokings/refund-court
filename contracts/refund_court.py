@@ -3,9 +3,15 @@
 
 A buyer files a seller-signed request and response for a paid x402 call. Validators confirm the USDC
 payment on Base Sepolia and judge each frozen promise criterion against the signed response. Code maps
-the verdicts to REFUND, DELIVERED or VOID. A finalized REFUND is paid in the same USDC from the
-seller's bond in RefundEscrow on Base Sepolia, and validators confirm that payout before the case
+the verdicts to REFUND, DELIVERED or VOID. A REFUND is paid in the same USDC from the seller's bond in
+RefundEscrow on Base Sepolia only after the judging transaction is FINALIZED on GenLayer (the relayer
+checks it, and the refund names that transaction), and validators confirm that payout before the case
 closes. Signatures are recovered with pure deterministic secp256k1 arithmetic.
+
+The seller signs the agreed terms (frozen service id and promise hash) into every request, so
+evidence can only be filed under the promise it was sold under. A payment that is not yet confirmed,
+or a Base RPC outage, never ends a claim: the case stays FILED, the attempt is logged, and anyone may
+retry the judgment. The payment hash stays reserved for that case, so replay protection holds.
 """
 import hashlib
 import json
@@ -23,6 +29,7 @@ TRANSFER='0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'  #
 REFUNDED='0xa68614f2eb86941fcdf4c694bc71c8e65c4c783510dfde2cd3a8b1a0b10c76a7'  # Refunded(bytes32,bytes32,address,uint256,bytes32)
 CONFIRMATIONS=3
 FILING_WINDOW=86400
+MAX_CHECKS=20  # logged verification attempts kept per case
 
 def require(ok,message):
     if not ok: raise gl.vm.UserError('[EXPECTED] '+message)
@@ -65,20 +72,22 @@ def recover(digest,signature):
     require(q is not None,'invalid recovered public key')
     return '0x'+Keccak256(q[0].to_bytes(32,'big')+q[1].to_bytes(32,'big')).digest()[-20:].hex()
 
-def rpc(url,method,params):
+def rpc(url,method,params,nullable=False):
     r=gl.nondet.web.post(url,body=json.dumps({'jsonrpc':'2.0','id':1,'method':method,'params':params}).encode(),headers={'Content-Type':'application/json','User-Agent':'Mozilla/5.0 RefundCourt/2.0'})
     require(r.status==200,'RPC unavailable')
     d=json.loads(r.body.decode('utf8'))
-    require(not d.get('error') and d.get('result') is not None,'RPC result unavailable')
-    return d['result']
+    require(not d.get('error') and (nullable or d.get('result') is not None),'RPC result unavailable')
+    return d.get('result')
 
 def topic_address(topic):
     return '0x'+str(topic)[-40:].lower()
 
 def confirmed_receipt(url,tx):
-    """A successful receipt on the canonical chain with enough confirmations, else None."""
+    """A successful receipt on the canonical chain with enough confirmations; None while it is not
+    yet mined or not yet confirmed; {} when it is mined but failed or was reorganized away."""
     require(rpc(url,'eth_chainId',[])=='0x14a34','wrong Base network')
-    receipt=rpc(url,'eth_getTransactionReceipt',[tx])
+    receipt=rpc(url,'eth_getTransactionReceipt',[tx],nullable=True)
+    if receipt is None:return None
     block=rpc(url,'eth_getBlockByNumber',[receipt['blockNumber'],False])
     height=int(rpc(url,'eth_blockNumber',[]),16)
     if height<int(receipt['blockNumber'],16)+CONFIRMATIONS-1:return None
@@ -92,11 +101,11 @@ def base_payment(payment,buyer,seller,amount):
     for url in RPCS:
         try:
             receipt=confirmed_receipt(url,payment)
-            if receipt is None:return {'status':'UNAVAILABLE','reason':'Payment needs three confirmations'}
+            if receipt is None:return {'status':'PENDING','reason':'Payment not yet mined with three confirmations; retry'}
             paid=bool(receipt) and len(usdc_transfers(receipt,buyer,seller,amount))==1
             return {'status':'PAID' if paid else 'INVALID','transaction':payment,'block_hash':receipt.get('blockHash',''),'reason':'Canonical successful USDC transfer checked'}
         except Exception:pass
-    return {'status':'UNAVAILABLE','reason':'Base Sepolia RPC unreachable'}
+    return {'status':'UNAVAILABLE','reason':'Base Sepolia RPC unreachable; retry'}
 
 def base_payout(payout,escrow,case_key,buyer,amount):
     """The escrow's refund for this case: its Refunded event and the matching USDC transfer."""
@@ -146,14 +155,16 @@ class RefundCourt(gl.Contract):
         require(not self.used.get(payment_hash,False),'payment hash already used')
         require(0<len(request)<=2500 and 0<len(response)<=12000,'evidence size limits')
         req=json.loads(request)
-        require(isinstance(req,dict) and set(req)=={'buyer','city','endpoint','delivered_at','nonce'},'strict request schema')
+        require(isinstance(req,dict) and set(req)=={'buyer','city','endpoint','delivered_at','nonce','service_id','promise_hash'},'strict request schema')
         require(req['buyer']==buyer and req['endpoint']==service['endpoint'],'signed request buyer or endpoint mismatch')
+        # The seller signed the terms it sold under; they must be the frozen terms of this claim.
+        require(req['service_id']==key and req['promise_hash']==service['hash'],'signed terms do not match the frozen service and promise hash')
         require(isinstance(req['city'],str) and 1<=len(req['city'])<=80 and isinstance(req['nonce'],str) and 8<=len(req['nonce'])<=100,'request city and nonce required')
         require(type(req['delivered_at']) is int and now()-FILING_WINDOW<=req['delivered_at']<=now()+60,'claim must be filed within 24 hours')
         digest=hashlib.sha256((request+response+payment_hash).encode()).digest()
         require(recover(digest,signature)==service['seller'],'signature does not recover registered seller')
         cid='case-'+str(len(self.ids)+1)
-        c={'id':cid,'case_key':self._case_key(cid),'service_id':key,'promise_hash':service['hash'],'seller':service['seller'],'buyer':buyer,'payment_hash':payment_hash,'request':request,'response':response,'signature':signature,'evidence_sha256':digest.hex(),'status':'FILED','created_at':now(),'verdicts':[],'payment':{},'refund_units':service['refund_units'],'price_units':service['price_units'],'criteria':service['criteria'],'payout':{},'reason':''}
+        c={'id':cid,'case_key':self._case_key(cid),'service_id':key,'promise_hash':service['hash'],'seller':service['seller'],'buyer':buyer,'payment_hash':payment_hash,'request':request,'response':response,'signature':signature,'evidence_sha256':digest.hex(),'status':'FILED','created_at':now(),'verdicts':[],'payment':{},'refund_units':service['refund_units'],'price_units':service['price_units'],'criteria':service['criteria'],'payout':{},'reason':'','checks':[],'attempts':0}
         self.used[payment_hash]=True
         self.cases[cid]=json.dumps(c);self.ids.append(cid)
 
@@ -164,6 +175,12 @@ class RefundCourt(gl.Contract):
         def payment_check():
             return base_payment(c['payment_hash'],c['buyer'],c['seller'],int(c['price_units']))
         payment=gl.eq_principle.strict_eq(payment_check)
+        if payment['status'] in ('PENDING','UNAVAILABLE'):
+            # Not a verdict: keep the claim filed and its payment reserved, log the attempt, allow a retry.
+            checks=c.get('checks',[])+[{'at':now(),'status':payment['status'],'reason':payment['reason']}]
+            c.update({'checks':checks[-MAX_CHECKS:],'attempts':c.get('attempts',0)+1,'payment':payment,'reason':payment['reason']})
+            self.cases[cid]=json.dumps(c)
+            return
         verdicts=[]
         if payment['status']=='PAID':
             for criterion in c['criteria']:
@@ -175,22 +192,13 @@ class RefundCourt(gl.Contract):
                 v=gl.vm.run_nondet_unsafe(leader,validate)
                 verdicts.append({'criterion':criterion,**v})
         outcome='VOID' if payment['status']!='PAID' or any(v['verdict']=='UNCLEAR' for v in verdicts) else 'REFUND' if any(v['verdict']=='NOT_MET' for v in verdicts) else 'DELIVERED'
-        c.update({'status':'JUDGED','outcome':outcome,'payment':payment,'verdicts':verdicts,'reason':payment.get('reason',''),'judged_at':now()})
+        c.update({'status':outcome,'outcome':outcome,'attempts':c.get('attempts',0)+1,'payment':payment,'verdicts':verdicts,'reason':payment.get('reason',''),'judged_at':now()})
         self.cases[cid]=json.dumps(c)
-        # The outcome takes effect, and a refund may be paid, only after this judgment finalizes.
-        gl.get_contract_at(gl.message.contract_address).emit(on='finalized').finalize_judgment(cid)
-
-    @gl.public.write
-    def finalize_judgment(self,cid: str) -> None:
-        require(gl.message.sender_address==gl.message.contract_address,'self finality callback only')
-        c=json.loads(self.cases[cid])
-        if c['status']=='JUDGED':
-            c['status']=c['outcome'];self.cases[cid]=json.dumps(c)
 
     @gl.public.write
     def record_payout(self,cid: str,payout_hash: str) -> None:
         c=json.loads(self.cases[cid])
-        require(c['status']=='REFUND','finalized refund required')
+        require(c['status']=='REFUND','refund verdict required')
         require(re.fullmatch(r'0x[0-9a-fA-F]{64}',payout_hash) is not None,'Base transaction hash required')
         payout_hash=payout_hash.lower();escrow=self.escrow
         def payout_check():

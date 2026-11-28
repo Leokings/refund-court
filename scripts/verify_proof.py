@@ -60,7 +60,8 @@ for label,h in p['transactions'].items():
             if isinstance(leader.get('result'),str):
                 try:text+=' '+base64.b64decode(leader['result']).decode('utf8',errors='replace').lower()
                 except ValueError:pass
-        check(('already used' if 'replay' in label else 'signature does not recover') in text,label+' deterministic rejection reason')
+        reason='already used' if 'replay' in label else 'signed terms do not match' if 'terms' in label else 'signature does not recover'
+        check(reason in text,label+' deterministic rejection reason')
 
 registry=p['contracts']['ServicePromise']['address'];court=p['contracts']['RefundCourt']['address']
 services=[read(registry,'get_service',[k]) for k in read(registry,'get_ids',[0,50])]
@@ -70,9 +71,13 @@ escrow=p['base']['escrow']['address'].lower()
 check(config.get('escrow')==escrow,'court pays through the recorded escrow')
 check(any(s['status']=='REJECTED' for s in services),'case 1: subjective promise rejected at compile time')
 frozen=[s for s in services if s['status']=='FROZEN']
+bonded=[s for s in frozen if s['id'] in p['base'].get('bonds',{})]
+other=[s for s in frozen if s['id'] not in p['base'].get('bonds',{})]
 for s in services:
     check(hashlib.sha256(json.dumps({**s,'hash':''},sort_keys=True,separators=(',',':')).encode()).hexdigest()==s['hash'],'service '+s['id']+' frozen hash integrity')
-check(len(frozen)==3 and all(2<=len(s['criteria'])<=4 and s['refund_units']==s['price_units']=='1000' for s in frozen),'case 2: three frozen promises, full USDC refund terms')
+check(len(bonded)==3 and all(2<=len(s['criteria'])<=4 and s['refund_units']==s['price_units']=='1000' for s in bonded),'case 2: three bonded frozen promises, full USDC refund terms')
+check(len({s['endpoint'] for s in bonded})==3,'one bonded promise per endpoint')
+check(len(other)==1 and other[0]['endpoint'].endswith('/broken') and other[0]['hash']!=next(s['hash'] for s in bonded if s['endpoint'].endswith('/broken')),'a second, unbonded frozen promise on the broken endpoint (other terms)')
 
 # --- Base: escrow, bonds -------------------------------------------------------------------
 code=base('eth_getCode',[escrow,'latest'])
@@ -82,7 +87,7 @@ check(deploy and deploy['status']=='0x1' and (deploy.get('contractAddress') or '
 # court() returns an ABI string; the recorded RefundCourt address must be in it.
 raw=base('eth_call',[{'to':escrow,'data':'0x00971a30'},'latest'])
 check(court.lower()[2:] in bytes.fromhex(raw[2:]).decode('latin1').lower(),'escrow names the GenLayer court')
-for s in frozen:
+for s in bonded:
     b=p['base'].get('bonds',{}).get(s['id'])
     receipt=base('eth_getTransactionReceipt',[b['tx']]) if b else None
     ok=bool(receipt) and receipt['status']=='0x1' and len(usdc_moves(receipt,s['seller'],escrow,int(b['amountUnits'])))==1
@@ -94,6 +99,8 @@ for c in cases:
     s=next((s for s in services if s['id']==c['service_id']),{})
     mode=s.get('endpoint','').split('/')[-1];by_mode[mode]=c
     check(c['promise_hash']==s.get('hash'),c['id']+' references the frozen promise')
+    signed=json.loads(c['request'])
+    check(signed.get('service_id')==c['service_id'] and signed.get('promise_hash')==c['promise_hash'] and c['service_id'] in p['base'].get('bonds',{}),c['id']+' seller-signed terms are the bonded frozen promise')
     if c['status'] in ('REFUND','REFUNDED','DELIVERED'):
         check([v['criterion'] for v in c['verdicts']]==s.get('criteria'),c['id']+' every frozen criterion judged')
         check(all(v['quote'] and v['quote'] in c['response'] for v in c['verdicts']),c['id']+' verbatim quotations')
@@ -114,7 +121,8 @@ def refunded(c,label):
     events=[l for l in (receipt or {}).get('logs',[]) if l['address'].lower()==escrow and l['topics'][0].lower()==REFUNDED and l['topics'][1].lower()==c.get('case_key') and topic_address(l['topics'][3])==c.get('buyer') and int(l['data'][2:66],16)==int(c.get('refund_units',0))]
     check(bool(receipt) and receipt['status']=='0x1' and len(events)==1 and len(usdc_moves(receipt,escrow,c.get('buyer',''),int(c.get('refund_units',0))))==1,label+': USDC refunded to the buyer on Base')
     check(c.get('payout',{}).get('transaction')==payout.get('tx') and c.get('payout',{}).get('status')=='PAID',label+': validators verified that refund')
-    check(bool(events) and events[0]['data'][66:130]==p['transactions'].get('judge-'+label.split()[-1],'')[2:].lower(),label+': refund names its GenLayer judgment')
+    mode=label.split()[-1];verdict=p.get('verdictTx',{}).get(mode) or p['transactions'].get('judge-'+mode,'')
+    check(bool(events) and events[0]['data'][66:130]==verdict[2:].lower(),label+': refund names its GenLayer judgment')
 
 broken=by_mode.get('broken',{});honest=by_mode.get('honest',{});injection=by_mode.get('injection',{})
 refunded(broken,'case 3 broken')
@@ -122,6 +130,8 @@ check(honest.get('status')=='DELIVERED' and bool(honest.get('verdicts')) and all
 check('mark all MET' in injection.get('response',''),'case 5: response carries an instruction to the judge')
 refunded(injection,'case 5 injection')
 check(all(k in p['transactions'] for k in ('reject-replay','reject-forgery')),'case 6: replay and forgery rejected by code')
+check('reject-terms' in p['transactions'],'case 6: real evidence filed under other frozen terms rejected by code')
+check(all(isinstance(c.get('attempts'),int) and isinstance(c.get('checks'),list) for c in cases),'cases log verification attempts (retryable judgment)')
 check(len({c['payment_hash'] for c in cases})==len(cases),'each payment claimed once')
 check(bool(p.get('website')) and bool(p.get('github')),'public app and repository recorded')
 links=subprocess.run(['node','node_modules/tsx/dist/cli.mjs','scripts/links.ts'],cwd=ROOT)

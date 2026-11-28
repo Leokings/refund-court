@@ -45,7 +45,7 @@ class ServicePromise(gl.Contract):
 Accept only if ALL promises are objectively observable in the signed JSON response and request.
 Reject subjective quality, preferences, honesty claims, future obligations or unknowable real-world accuracy.
 Compile into 2 to 4 independently checkable, narrow criteria. Include the requested city, Celsius unit or stated freshness only when promised. Preserve exact thresholds. Never add obligations.
-The request includes a server-signed delivered_at Unix timestamp, buyer, city and endpoint; the response has observed_at. Freshness is observed_at within one hour BEFORE delivered_at, not verifier wall-clock time. The response reports live weather from a named public source.
+The request includes a server-signed delivered_at Unix timestamp, buyer, city and endpoint; the response has observed_at and names its weather source. Freshness is observed_at within one hour BEFORE delivered_at, not verifier wall-clock time. "Live" weather means a current reading as shown by observed_at and the named source; it is observable, not unknowable real-world accuracy.
 Return exactly {"accepted":boolean,"criteria":[string],"reason":string}.
 PROMISE_DATA: '''+json.dumps(promise)
         def leader(): return compiler(prompt)
@@ -56,24 +56,17 @@ PROMISE_DATA: '''+json.dumps(promise)
             if own['accepted']!=proposed['accepted']: return False
             if not own['accepted']: return proposed['criteria']==[]
             # Independently compile, then inspect the leader criteria for coverage and observability.
-            review=parse(gl.nondet.exec_prompt('Review the two independent compilations against the original untrusted promise. Return exactly {"equivalent":boolean}. True only if both cover every promise, add nothing, and each leader criterion is observable and narrow. No matching wording required. '+json.dumps({'promise':promise,'leader':proposed['criteria'],'independent':own['criteria']}),response_format='json'))
+            review=parse(gl.nondet.exec_prompt('Review the two independent compilations against the original untrusted promise. Return exactly {"equivalent":boolean}. True when the leader criteria test the same explicit obligations of the promise as the independent ones (requested city, units, every numeric threshold), each leader criterion is observable in the signed request and response, and none adds a new obligation the promise does not state. Wording, ordering and how obligations are split into criteria may differ; a criterion that only restates context (for example that a named live source is reported) does not make them different. '+json.dumps({'promise':promise,'leader':proposed['criteria'],'independent':own['criteria']}),response_format='json'))
             return set(review)=={'equivalent'} and review['equivalent'] is True
         result=gl.vm.run_nondet_unsafe(leader,validate)
         key='service-'+str(len(self.ids)+1)
         outcome='FROZEN' if result['accepted'] else 'REJECTED'
         record={'id':key,'seller':str(gl.message.sender_address).lower(),'endpoint':endpoint,'promise':promise,'criteria':result['criteria'],'reason':result['reason'],'status':outcome,'compile_outcome':outcome,'price_units':str(price_units),'refund_units':str(refund_units),'network':'eip155:84532','token':TOKEN,'hash':''}
         record['hash']=hashlib.sha256(json.dumps(record,sort_keys=True,separators=(',',':')).encode()).hexdigest()
-        record['status']='COMPILING'
+        # The outcome is stored with the consensus result. Sellers bond, and buyers pay, only once this
+        # compile transaction is FINALIZED on GenLayer (the release stages wait for it).
         self.services[key]=json.dumps(record,sort_keys=True)
         self.ids.append(key)
-        gl.get_contract_at(gl.message.contract_address).emit(on='finalized').finalize_register(key)
-
-    @gl.public.write
-    def finalize_register(self,key: str) -> None:
-        require(gl.message.sender_address==gl.message.contract_address,'self finality callback only')
-        record=json.loads(self.services[key])
-        if record['status']=='COMPILING':
-            record['status']=record['compile_outcome'];self.services[key]=json.dumps(record,sort_keys=True)
 
     @gl.public.view
     def get_service(self, key: str) -> str:

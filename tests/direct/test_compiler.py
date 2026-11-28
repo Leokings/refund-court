@@ -3,7 +3,7 @@ import pytest
 from test_court import selfcall
 
 @pytest.mark.parametrize('accepted',[True,False])
-def test_compile_requires_independent_acceptance_and_finality(direct_vm,direct_deploy,direct_owner,monkeypatch,accepted):
+def test_compile_requires_independent_acceptance(direct_vm,direct_deploy,direct_owner,monkeypatch,accepted):
     vm=direct_vm;vm.sender=direct_owner
     c=direct_deploy('contracts/service_promise.py')
     from genlayer import gl,Address
@@ -20,8 +20,6 @@ def test_compile_requires_independent_acceptance_and_finality(direct_vm,direct_d
     c.register('https://refund-court.example/api/weather/honest','Returns weather for the requested city with Celsius units.',1000,1000)
     assert vm.run_validator()
     assert not vm.run_validator(leader_result={'accepted':not accepted,'criteria':criteria,'reason':'different'})
-    assert json.loads(c.get_service('service-1'))['status']=='COMPILING'
-    selfcall(vm,c.finalize_register,'service-1')
     record=json.loads(c.get_service('service-1'))
     assert record['status']==('FROZEN' if accepted else 'REJECTED') and len(record['hash'])==64
 

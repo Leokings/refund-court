@@ -9,7 +9,7 @@ from genlayer_py.types import TransactionHashVariant
 from genlayer_py.provider import provider
 
 ROOT = Path(__file__).resolve().parent.parent
-assert importlib.metadata.version('genlayer-py') == '0.18.0'
+assert importlib.metadata.version('genlayer-py') == '0.19.2'
 UA = {'User-Agent':'Mozilla/5.0 RefundCourt/1.0'}
 _post = provider.requests.post
 def browser_post(url, **kwargs):
@@ -67,6 +67,26 @@ def final(hash_value, label, allow_error=False):
         time.sleep(10)
     raise RuntimeError('Still pending; rerun to resume '+hash_value)
 
+def fees(c,address,method,args,value,code):
+    """A fee distribution for one transaction at live prices. Studio credits a zero-balance sender the
+    deposit and refunds unused budget, so allocations are generous: an LLM judgment or compile with a
+    child finality message is canceled if its execution or message budget runs short. A simulation of the
+    exact write, when Studio can run it, can only raise these allocations."""
+    sim={}
+    if code is None:
+        try:sim=c.estimate_transaction_fees_for_write(address,method,args=args or [],value=value)['distribution']
+        except Exception as e:print('fee simulation unavailable for',method,'-',str(e)[:120],flush=True)
+    est=c.estimate_transaction_fees({
+        # Time units bound each node's LLM and web work; a validator that runs out votes disagree or
+        # goes idle. Compiles and judgments use several LLM calls per node, so allocate generously
+        # (phase timeouts derived from these must stay within 30..600).
+        'leaderTimeunitsAllocation':max(600,int(sim.get('leaderTimeunitsAllocation',0))),
+        'validatorTimeunitsAllocation':max(600,int(sim.get('validatorTimeunitsAllocation',0))),
+        'executionBudgetPerRound':max(25*10**15,int(sim.get('executionBudgetPerRound',0))),
+        'totalMessageFees':max(0 if code is not None else 10**17,int(sim.get('totalMessageFees',0))),
+        'appealRounds':0,'rotations':[3]})
+    return {'distribution':est['distribution'],'feeValue':est['feeValue']}
+
 def tx(proof,label,address=None,method=None,args=None,code=None,index=0,value=0,allow_error=False,wait=True):
     if label not in proof['transactions']:
         if value:
@@ -77,9 +97,11 @@ def tx(proof,label,address=None,method=None,args=None,code=None,index=0,value=0,
         marker = ROOT / '.secrets/ambiguous-broadcast.json'
         if marker.exists(): raise RuntimeError('Reconcile ambiguous submission before any new write')
         c = client(index)
+        # StudioNet (Studio v0.123+) charges protocol fees: every deploy and write carries a fee
+        # distribution. Studio credits a zero-balance sender the deposit; unused budget is refunded.
+        f = fees(c,address,method,args,value,code)
         marker.write_text(json.dumps({'label':label,'address':address,'method':method,'valueWei':value}))
-        # StudioNet is gasless; genlayer-py 0.18.0 takes no fee argument.
-        h = c.deploy_contract(code,args=args or []) if code is not None else c.write_contract(address,method,args=args or [],value=value)
+        h = c.deploy_contract(code,args=args or [],fees=f) if code is not None else c.write_contract(address,method,args=args or [],value=value,fees=f)
         h = h.hex() if hasattr(h,'hex') else str(h)
         h = h if h.startswith('0x') else '0x'+h
         proof['transactions'][label] = h

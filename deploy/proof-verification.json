@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-11-20T19:55:17.352129+00:00",
+  "verifiedAt": "2026-11-28T10:40:44.868486+00:00",
   "passed": true,
   "checks": [
     {
@@ -59,18 +59,6 @@
       "passed": true
     },
     {
-      "check": "compile-subjective-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "compile-subjective-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "compile-subjective-child-0 execution success",
-      "passed": true
-    },
-    {
       "check": "compile-honest matching receipt",
       "passed": true
     },
@@ -80,18 +68,6 @@
     },
     {
       "check": "compile-honest execution success",
-      "passed": true
-    },
-    {
-      "check": "compile-honest-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "compile-honest-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "compile-honest-child-0 execution success",
       "passed": true
     },
     {
@@ -107,18 +83,6 @@
       "passed": true
     },
     {
-      "check": "compile-broken-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "compile-broken-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "compile-broken-child-0 execution success",
-      "passed": true
-    },
-    {
       "check": "compile-injection matching receipt",
       "passed": true
     },
@@ -131,15 +95,43 @@
       "passed": true
     },
     {
-      "check": "compile-injection-child-0 matching receipt",
+      "check": "compile-other-terms matching receipt",
       "passed": true
     },
     {
-      "check": "compile-injection-child-0 finalized",
+      "check": "compile-other-terms finalized",
       "passed": true
     },
     {
-      "check": "compile-injection-child-0 execution success",
+      "check": "compile-other-terms execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-other-terms-fahrenheit matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-other-terms-fahrenheit finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-other-terms-fahrenheit execution success",
+      "passed": true
+    },
+    {
+      "check": "reject-terms matching receipt",
+      "passed": true
+    },
+    {
+      "check": "reject-terms finalized",
+      "passed": true
+    },
+    {
+      "check": "reject-terms expected execution rejection",
+      "passed": true
+    },
+    {
+      "check": "reject-terms deterministic rejection reason",
       "passed": true
     },
     {
@@ -167,18 +159,6 @@
       "passed": true
     },
     {
-      "check": "judge-broken-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "judge-broken-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "judge-broken-child-0 execution success",
-      "passed": true
-    },
-    {
       "check": "file-honest matching receipt",
       "passed": true
     },
@@ -203,18 +183,6 @@
       "passed": true
     },
     {
-      "check": "judge-honest-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "judge-honest-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "judge-honest-child-0 execution success",
-      "passed": true
-    },
-    {
       "check": "file-injection matching receipt",
       "passed": true
     },
@@ -236,18 +204,6 @@
     },
     {
       "check": "judge-injection execution success",
-      "passed": true
-    },
-    {
-      "check": "judge-injection-child-0 matching receipt",
-      "passed": true
-    },
-    {
-      "check": "judge-injection-child-0 finalized",
-      "passed": true
-    },
-    {
-      "check": "judge-injection-child-0 execution success",
       "passed": true
     },
     {
@@ -331,7 +287,23 @@
       "passed": true
     },
     {
-      "check": "case 2: three frozen promises, full USDC refund terms",
+      "check": "service service-5 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "service service-6 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "case 2: three bonded frozen promises, full USDC refund terms",
+      "passed": true
+    },
+    {
+      "check": "one bonded promise per endpoint",
+      "passed": true
+    },
+    {
+      "check": "a second, unbonded frozen promise on the broken endpoint (other terms)",
       "passed": true
     },
     {
@@ -363,6 +335,10 @@
       "passed": true
     },
     {
+      "check": "case-1 seller-signed terms are the bonded frozen promise",
+      "passed": true
+    },
+    {
       "check": "case-1 every frozen criterion judged",
       "passed": true
     },
@@ -391,6 +367,10 @@
       "passed": true
     },
     {
+      "check": "case-2 seller-signed terms are the bonded frozen promise",
+      "passed": true
+    },
+    {
       "check": "case-2 every frozen criterion judged",
       "passed": true
     },
@@ -416,6 +396,10 @@
     },
     {
       "check": "case-3 references the frozen promise",
+      "passed": true
+    },
+    {
+      "check": "case-3 seller-signed terms are the bonded frozen promise",
       "passed": true
     },
     {
@@ -484,6 +468,14 @@
     },
     {
       "check": "case 6: replay and forgery rejected by code",
+      "passed": true
+    },
+    {
+      "check": "case 6: real evidence filed under other frozen terms rejected by code",
+      "passed": true
+    },
+    {
+      "check": "cases log verification attempts (retryable judgment)",
       "passed": true
     },
     {

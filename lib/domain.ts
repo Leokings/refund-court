@@ -55,6 +55,8 @@ export type CourtCase = {
   refund_units: string;
   price_units: string;
   reason: string;
+  attempts?: number;
+  checks?: { at: number; status: string; reason: string }[];
 };
 export type BaseSide = {
   chainId: number;
@@ -77,6 +79,7 @@ export type Proof = {
   claimCases?: CourtCase[];
   caseIds?: Record<string, string>;
   caseModes?: Record<string, string>;
+  verdictTx?: Record<string, string>;
   base?: BaseSide;
   cases: Record<string, unknown>;
   deposits: Record<string, number>;

@@ -1,0 +1,503 @@
+{
+  "verifiedAt": "2026-11-20T19:55:17.352129+00:00",
+  "passed": true,
+  "checks": [
+    {
+      "check": "StudioNet chain 61999",
+      "passed": true
+    },
+    {
+      "check": "ServicePromise source hash",
+      "passed": true
+    },
+    {
+      "check": "ServicePromise exact deployed source and address",
+      "passed": true
+    },
+    {
+      "check": "RefundCourt source hash",
+      "passed": true
+    },
+    {
+      "check": "RefundCourt exact deployed source and address",
+      "passed": true
+    },
+    {
+      "check": "deploy-ServicePromise matching receipt",
+      "passed": true
+    },
+    {
+      "check": "deploy-ServicePromise finalized",
+      "passed": true
+    },
+    {
+      "check": "deploy-ServicePromise execution success",
+      "passed": true
+    },
+    {
+      "check": "deploy-RefundCourt matching receipt",
+      "passed": true
+    },
+    {
+      "check": "deploy-RefundCourt finalized",
+      "passed": true
+    },
+    {
+      "check": "deploy-RefundCourt execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-subjective-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-honest matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-honest finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-honest execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-honest-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-honest-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-honest-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-broken matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-broken finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-broken execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-broken-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-broken-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-broken-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-injection matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-injection finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-injection execution success",
+      "passed": true
+    },
+    {
+      "check": "compile-injection-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "compile-injection-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "compile-injection-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "file-broken matching receipt",
+      "passed": true
+    },
+    {
+      "check": "file-broken finalized",
+      "passed": true
+    },
+    {
+      "check": "file-broken execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-broken matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-broken finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-broken execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-broken-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-broken-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-broken-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "file-honest matching receipt",
+      "passed": true
+    },
+    {
+      "check": "file-honest finalized",
+      "passed": true
+    },
+    {
+      "check": "file-honest execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-honest matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-honest finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-honest execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-honest-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-honest-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-honest-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "file-injection matching receipt",
+      "passed": true
+    },
+    {
+      "check": "file-injection finalized",
+      "passed": true
+    },
+    {
+      "check": "file-injection execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-injection matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-injection finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-injection execution success",
+      "passed": true
+    },
+    {
+      "check": "judge-injection-child-0 matching receipt",
+      "passed": true
+    },
+    {
+      "check": "judge-injection-child-0 finalized",
+      "passed": true
+    },
+    {
+      "check": "judge-injection-child-0 execution success",
+      "passed": true
+    },
+    {
+      "check": "payout-broken matching receipt",
+      "passed": true
+    },
+    {
+      "check": "payout-broken finalized",
+      "passed": true
+    },
+    {
+      "check": "payout-broken execution success",
+      "passed": true
+    },
+    {
+      "check": "payout-injection matching receipt",
+      "passed": true
+    },
+    {
+      "check": "payout-injection finalized",
+      "passed": true
+    },
+    {
+      "check": "payout-injection execution success",
+      "passed": true
+    },
+    {
+      "check": "reject-replay matching receipt",
+      "passed": true
+    },
+    {
+      "check": "reject-replay finalized",
+      "passed": true
+    },
+    {
+      "check": "reject-replay expected execution rejection",
+      "passed": true
+    },
+    {
+      "check": "reject-replay deterministic rejection reason",
+      "passed": true
+    },
+    {
+      "check": "reject-forgery matching receipt",
+      "passed": true
+    },
+    {
+      "check": "reject-forgery finalized",
+      "passed": true
+    },
+    {
+      "check": "reject-forgery expected execution rejection",
+      "passed": true
+    },
+    {
+      "check": "reject-forgery deterministic rejection reason",
+      "passed": true
+    },
+    {
+      "check": "court pays through the recorded escrow",
+      "passed": true
+    },
+    {
+      "check": "case 1: subjective promise rejected at compile time",
+      "passed": true
+    },
+    {
+      "check": "service service-1 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "service service-2 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "service service-3 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "service service-4 frozen hash integrity",
+      "passed": true
+    },
+    {
+      "check": "case 2: three frozen promises, full USDC refund terms",
+      "passed": true
+    },
+    {
+      "check": "RefundEscrow deployed on Base Sepolia",
+      "passed": true
+    },
+    {
+      "check": "escrow deployment receipt",
+      "passed": true
+    },
+    {
+      "check": "escrow names the GenLayer court",
+      "passed": true
+    },
+    {
+      "check": "case 2: service-2 USDC bond posted on Base",
+      "passed": true
+    },
+    {
+      "check": "case 2: service-3 USDC bond posted on Base",
+      "passed": true
+    },
+    {
+      "check": "case 2: service-4 USDC bond posted on Base",
+      "passed": true
+    },
+    {
+      "check": "case-1 references the frozen promise",
+      "passed": true
+    },
+    {
+      "check": "case-1 every frozen criterion judged",
+      "passed": true
+    },
+    {
+      "check": "case-1 verbatim quotations",
+      "passed": true
+    },
+    {
+      "check": "case case-1 validators confirmed the x402 payment",
+      "passed": true
+    },
+    {
+      "check": "case-1 x402 USDC payment on Base",
+      "passed": true
+    },
+    {
+      "check": "case-1 byte-exact paid evidence",
+      "passed": true
+    },
+    {
+      "check": "case-1 signed digest",
+      "passed": true
+    },
+    {
+      "check": "case-2 references the frozen promise",
+      "passed": true
+    },
+    {
+      "check": "case-2 every frozen criterion judged",
+      "passed": true
+    },
+    {
+      "check": "case-2 verbatim quotations",
+      "passed": true
+    },
+    {
+      "check": "case case-2 validators confirmed the x402 payment",
+      "passed": true
+    },
+    {
+      "check": "case-2 x402 USDC payment on Base",
+      "passed": true
+    },
+    {
+      "check": "case-2 byte-exact paid evidence",
+      "passed": true
+    },
+    {
+      "check": "case-2 signed digest",
+      "passed": true
+    },
+    {
+      "check": "case-3 references the frozen promise",
+      "passed": true
+    },
+    {
+      "check": "case-3 every frozen criterion judged",
+      "passed": true
+    },
+    {
+      "check": "case-3 verbatim quotations",
+      "passed": true
+    },
+    {
+      "check": "case case-3 validators confirmed the x402 payment",
+      "passed": true
+    },
+    {
+      "check": "case-3 x402 USDC payment on Base",
+      "passed": true
+    },
+    {
+      "check": "case-3 byte-exact paid evidence",
+      "passed": true
+    },
+    {
+      "check": "case-3 signed digest",
+      "passed": true
+    },
+    {
+      "check": "case 3 broken: NOT_MET, refund recorded on GenLayer",
+      "passed": true
+    },
+    {
+      "check": "case 3 broken: USDC refunded to the buyer on Base",
+      "passed": true
+    },
+    {
+      "check": "case 3 broken: validators verified that refund",
+      "passed": true
+    },
+    {
+      "check": "case 3 broken: refund names its GenLayer judgment",
+      "passed": true
+    },
+    {
+      "check": "case 4: honest response delivered, no refund",
+      "passed": true
+    },
+    {
+      "check": "case 5: response carries an instruction to the judge",
+      "passed": true
+    },
+    {
+      "check": "case 5 injection: NOT_MET, refund recorded on GenLayer",
+      "passed": true
+    },
+    {
+      "check": "case 5 injection: USDC refunded to the buyer on Base",
+      "passed": true
+    },
+    {
+      "check": "case 5 injection: validators verified that refund",
+      "passed": true
+    },
+    {
+      "check": "case 5 injection: refund names its GenLayer judgment",
+      "passed": true
+    },
+    {
+      "check": "case 6: replay and forgery rejected by code",
+      "passed": true
+    },
+    {
+      "check": "each payment claimed once",
+      "passed": true
+    },
+    {
+      "check": "public app and repository recorded",
+      "passed": true
+    },
+    {
+      "check": "GenLayer Explorer contract and transaction links verified",
+      "passed": true
+    }
+  ],
+  "blockers": []
+}

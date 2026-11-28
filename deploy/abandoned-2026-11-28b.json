@@ -1,0 +1,45 @@
+{
+  "reason": "Promise compilation reached MAJORITY_DISAGREE three times: the review step required identical coverage, and independent compiles differ on whether \"live\" becomes a criterion. Review now compares explicit obligations. Nothing was bonded, filed or paid through these.",
+  "genlayer": {
+    "ServicePromise": {
+      "address": "0x6F7da824227b87eb7F174ac329A87cef7661A48C",
+      "source": "service_promise.py",
+      "sha256": "e311996a4e93604d044227ae95df8055ba6bae4780f47b266750d476a26536e5"
+    },
+    "RefundCourt": {
+      "address": "0x7959d08F16118Ad966A2fe14ABb064377842D0A7",
+      "source": "refund_court.py",
+      "sha256": "262736c684c95f25b11d5f2deb8d81e804e2b0bdbc5091891d99ef34c63d224b"
+    }
+  },
+  "transactions": {
+    "deploy-ServicePromise": "0xbcaa0bb5c142ea227891c37d2a69270a75cb9b09f7a973020343606e084d8d28",
+    "deploy-RefundCourt": "0xe7a174bcc25bdd40f9e6c6500dd28e59938d9e4bccbb8e96c11693ec9a775ca7",
+    "compile-subjective": "0x5610319292ef5e9f9df94ef89d911f09018f70569e755aade33759d54a347129",
+    "compile-honest": "0x5bd9bf5e235824443a965bdbe510703261bd9daad9dd119897fd0ff5c2861ec4"
+  },
+  "disagreed": {
+    "compile-honest-1": "0x9f19323ec8616cb51da7a64ca38b5b3d5a7215bd070b0c42deab04becf24af10",
+    "compile-honest-2": "0x54445e2d0e555c86375a424afff55378d611eb924d49209b4b1133abd81de55f"
+  },
+  "base": {
+    "chainId": 84532,
+    "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "escrow": {
+      "deployTx": "0x2d63d6893fc1b0158ef095a1755a76776a8fdf0a1df3e16849736b2fe63b7f22",
+      "relayer": "0xe9b24adc2f78f12ba5ad3ed529051fe35ec799fc",
+      "source": "evm/RefundEscrow.sol",
+      "compiler": "0.8.26+commit.8a97fa7a.Emscripten.clang",
+      "address": "0xd9244cbe0821daf2228087aba70df5bf29fef899",
+      "setCourtTx": "0xbb5791832b715316300d11bba1e49277a449ba5d9bd8cd76d0653903ffda0bf0"
+    }
+  },
+  "receipts": {
+    "compile-honest.json": "MAJORITY_DISAGREE",
+    "compile-subjective.json": "MAJORITY_AGREE",
+    "deploy-RefundCourt.json": "MAJORITY_AGREE",
+    "deploy-ServicePromise.json": "MAJORITY_AGREE",
+    "disagreed-compile-honest-1.json": "MAJORITY_DISAGREE",
+    "disagreed-compile-honest-2.json": "MAJORITY_DISAGREE"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "reason": "StudioNet began charging protocol fees and does not deliver on-finalization child messages under them; these deployments used finality callbacks and were replaced. Nothing was filed or paid through them.",
+  "genlayer": {
+    "ServicePromise": {
+      "address": "0x63bb684D4a5F3A3c417507D436404d7807a1EFCB",
+      "source": "service_promise.py",
+      "sha256": "48903072d8e4c8235c988515bd9b22ea02ff61a8defd30165a0ec8218b56adb4"
+    },
+    "RefundCourt": {
+      "address": "0x65F7867aa7DE7C55f3BD30073dddDEE61288FB75",
+      "source": "refund_court.py",
+      "sha256": "c8ac2b13af7829191d66da2b2c8e2730249355939cca7639018cdc9ee1868a8c"
+    }
+  },
+  "transactions": {
+    "deploy-ServicePromise": "0xb171009434ceb82b5605f885f0f4914cf5cf493773ad7fdd2aaaa91c0517b58a",
+    "deploy-RefundCourt": "0x6b6a0be1dded605757228f41f884e9231bdfdd40f185287c2dd5faa49fe20412",
+    "compile-subjective": "0x91ee9ede532bd5f82b571b98f1e05fe4f7cde9c51cc20accfd041c49bb04641d"
+  },
+  "base": {
+    "chainId": 84532,
+    "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "escrow": {
+      "deployTx": "0x0d6db334680507b04d64d96dbad3da39be4ea93be525baa6be30a96c7a5e95a6",
+      "relayer": "0xe9b24adc2f78f12ba5ad3ed529051fe35ec799fc",
+      "source": "evm/RefundEscrow.sol",
+      "compiler": "0.8.26+commit.8a97fa7a.Emscripten.clang",
+      "address": "0x41e2076f0032d98c544710751e456b0a60bbec72",
+      "setCourtTx": "0x9e81e1e1f4d36a777e2c9fa566c03e6ca496327fc092be00c46b3566e156de49"
+    }
+  },
+  "canceled": {
+    "hash": "0xcac3fa6244b026f05e6ab15e8ca6fcc382d6ade23a9ef9ee4a7789691901e123",
+    "status": "CANCELED",
+    "result_name": "NO_MAJORITY",
+    "note": "canceled for an undersized fee budget; resent"
+  }
+}

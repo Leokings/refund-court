@@ -81,7 +81,11 @@ async function bond() {
   const [sellerAccount] = accounts();
   const seller = wallet(keyOf(JSON.parse(fs.readFileSync(".secrets/accounts.json", "utf8"))[0]));
   p.base.bonds ??= {};
-  const frozen = (p.services ?? []).filter((s: any) => s.status === "FROZEN");
+  // One bond per endpoint, for the first frozen promise it is sold under. A later promise on the same
+  // endpoint (the demo's other-terms promise) is never bonded, so the seller never sells under it.
+  const firstPerEndpoint = new Map<string, any>();
+  for (const s of p.services ?? []) if (s.status === "FROZEN" && !firstPerEndpoint.has(s.endpoint)) firstPerEndpoint.set(s.endpoint, s);
+  const frozen = [...firstPerEndpoint.values()];
   if (!frozen.length) throw Error("No frozen promises recorded yet (run python scripts/release.py record).");
   const need = BOND_UNITS * BigInt(frozen.filter((s: any) => !p.base.bonds[s.id]?.tx).length);
   const allowance = await pub.readContract({ address: USDC, abi: erc20Abi, functionName: "allowance", args: [sellerAccount.address, escrow] });
@@ -110,8 +114,18 @@ async function refund(cid: string) {
   if (c.status !== "REFUND") throw Error(`${cid} is ${c.status}; only a finalized REFUND is paid`);
   p.base.payouts ??= {};
   if (p.base.payouts[cid]?.tx) return console.log("already refunded", scan(p.base.payouts[cid].tx));
-  const judgeTx = p.transactions?.[`judge-${p.caseModes?.[cid]}`];
+  // The GenLayer transaction that produced the verdict (a retry if the first check was kept FILED).
+  const mode = p.caseModes?.[cid];
+  const judgeTx = p.verdictTx?.[mode] ?? p.transactions?.[`judge-${mode}`];
   if (!judgeTx) throw Error(`No recorded GenLayer judgment for ${cid}`);
+  // Pay only a final verdict: the judging transaction must be FINALIZED and have executed successfully.
+  const judged = (await fetch("https://studio.genlayer.com/api", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionByHash", params: [judgeTx] }),
+  }).then((r) => r.json())) as { result?: { status?: string; txExecutionResultName?: string } };
+  if (judged.result?.status !== "FINALIZED" || !["SUCCESS", "FINISHED_WITH_RETURN"].includes(judged.result?.txExecutionResultName ?? ""))
+    throw Error(`${cid}: judgment ${judgeTx} is ${judged.result?.status ?? "unknown"}; refunds are paid only on a FINALIZED verdict`);
   const a = art();
   const key = p.base.bonds[c.service_id]?.serviceKey;
   if (!key) throw Error(`No bond recorded for ${c.service_id}`);

@@ -16,7 +16,7 @@ const STAMP: Record<string, [string, string]> = {
   DELIVERED: ["neutral", "Delivered"],
   VOID: ["neutral", "Void"],
   JUDGED: ["neutral", "Judged"],
-  FILED: ["neutral", "Filed"],
+  FILED: ["warn", "Waiting on Base"],
 };
 
 function Out({ href, children }: { href?: string | null; children: React.ReactNode }) {
@@ -38,14 +38,17 @@ function safe(fn: () => string): string | null {
 
 function CaseCard({ c, mode, proof, open, onToggle }: { c: CourtCase; mode: string; proof: Proof; open: boolean; onToggle: () => void }) {
   const [tone, label] = STAMP[c.status] ?? ["neutral", c.status];
-  const judge = proof.transactions[`judge-${mode}`];
+  const judge = proof.verdictTx?.[mode] ?? proof.transactions[`judge-${mode}`];
   const file = proof.transactions[`file-${mode}`];
   const payoutRecord = proof.transactions[`payout-${mode}`];
   const refundTx = proof.base?.payouts?.[c.id]?.tx;
   let body: Record<string, unknown> = {};
+  let signed: { service_id?: string; promise_hash?: string } = {};
   try {
     body = JSON.parse(c.response);
+    signed = JSON.parse(c.request);
   } catch {}
+  const waiting = c.status === "FILED" && (c.attempts ?? 0) > 0;
   return (
     <article className={`case ${open ? "open" : ""}`}>
       <button className="case-head" onClick={onToggle} aria-expanded={open}>
@@ -68,6 +71,11 @@ function CaseCard({ c, mode, proof, open, onToggle }: { c: CourtCase; mode: stri
               ))}
             </code>
           </div>
+          <p className="terms">
+            Sold under {signed.service_id} · promise <code>{signed.promise_hash?.slice(0, 12)}…</code>, signed by the seller
+            {c.attempts ? ` · judged after ${c.attempts} payment check${c.attempts > 1 ? "s" : ""}` : ""}
+          </p>
+          {waiting && <p className="terms">Payment not confirmed on Base yet ({c.reason}). The claim stays filed; anyone can retry.</p>}
           <ul className="verdicts">
             {c.verdicts.map((v) => (
               <li key={v.criterion} className={v.verdict === "MET" ? "met" : v.verdict === "NOT_MET" ? "notmet" : "unclear"}>
@@ -76,7 +84,7 @@ function CaseCard({ c, mode, proof, open, onToggle }: { c: CourtCase; mode: stri
                 <q>{v.quote}</q>
               </li>
             ))}
-            {!c.verdicts.length && <li className="unclear">No criterion was judged: {c.reason || "payment not confirmed"}.</li>}
+            {!c.verdicts.length && !waiting && <li className="unclear">No criterion was judged: {c.reason || "payment not confirmed"}.</li>}
           </ul>
           <div className="pills">
             <Out href={safe(() => basePayment(c.payment_hash))}>x402 payment · Base</Out>

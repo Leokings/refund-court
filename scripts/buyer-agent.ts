@@ -6,6 +6,8 @@ import { recoverAddress } from "viem";
 import { x402Client } from "@x402/core/client";
 import { wrapFetchWithPayment } from "@x402/fetch";
 import { ExactEvmScheme } from "@x402/evm/exact/client";
+import { decodePaymentRequiredHeader } from "@x402/core/http";
+import { termsMatch, type Terms } from "../lib/terms";
 import type { Envelope, Proof } from "../lib/domain";
 import { permittedPayments } from "../lib/payment-policy";
 const mode = process.argv[2] ?? "broken";
@@ -27,10 +29,12 @@ try {
   console.log("Existing signed payment artifact retained:", path);
   process.exit(0);
 } catch {}
+// The frozen promise this endpoint is sold under: the one with a USDC bond on Base.
+const bonds = (proof as unknown as { base?: { bonds?: Record<string, { tx?: string }> } }).base?.bonds ?? {};
 const endpoint = proof.services?.find(
-  (s) => s.status === "FROZEN" && s.endpoint.endsWith("/" + mode),
+  (s) => s.status === "FROZEN" && s.endpoint.endsWith("/" + mode) && s.id in bonds,
 );
-const bonded = (proof as unknown as { base?: { bonds?: Record<string, { tx?: string }> } }).base?.bonds?.[endpoint?.id ?? ""];
+const bonded = bonds[endpoint?.id ?? ""];
 if (!endpoint || !bonded?.tx)
   throw Error("A frozen promise with a USDC bond on Base is required (npx tsx scripts/base.ts bond)");
 const keys = JSON.parse(
@@ -39,6 +43,16 @@ const keys = JSON.parse(
 const signer = privateKeyToAccount(
   ("0x" + keys[1].replace(/^0x/, "")) as `0x${string}`,
 );
+// The terms this buyer agrees to: the frozen promise it read from the registry record.
+const agreed: Terms = { service_id: endpoint.id, promise_hash: endpoint.hash };
+// Before paying, read the 402 offer and refuse unless the seller sells under exactly those terms.
+const offer = await fetch(`${endpoint.endpoint}?city=Lagos`);
+const offered = offer.headers.get("payment-required");
+if (offer.status !== 402 || !offered)
+  throw Error(`Expected an x402 offer, got HTTP ${offer.status}; nothing was paid.`);
+const description = decodePaymentRequiredHeader(offered).resource?.description ?? "";
+if (!description.includes(`Terms: ${agreed.service_id}, promise ${agreed.promise_hash}`))
+  throw Error("The seller does not offer the frozen terms; nothing was paid.");
 const intentPath = `.secrets/payment-${mode}-intent.json`;
 try {
   await fs.access(intentPath);
@@ -74,12 +88,14 @@ if (!response.ok) throw Error(body.error ?? JSON.stringify(body));
 const digest = createHash("sha256")
   .update(body.request + body.response + body.payment_hash)
   .digest("hex");
+// The signature must recover the seller registered in the frozen promise, over the agreed terms.
 if (
-  (await recoverAddress({ hash: `0x${digest}`, signature: body.signature })) !==
-  privateKeyToAccount(("0x" + keys[0].replace(/^0x/, "")) as `0x${string}`)
-    .address
+  (await recoverAddress({ hash: `0x${digest}`, signature: body.signature })).toLowerCase() !==
+  endpoint.seller.toLowerCase()
 )
   throw Error("Seller signature mismatch");
+if (!termsMatch(body.request, agreed))
+  throw Error("The seller signed different terms than the frozen promise; this evidence cannot be filed.");
 await fs.mkdir("deploy/payments", { recursive: true });
 await fs.writeFile(
   path,

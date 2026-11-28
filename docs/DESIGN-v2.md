@@ -18,8 +18,9 @@ weather, and only worked on desktop. v2 refunds the buyer's actual USDC on the c
    amount, three confirmations), then judge each frozen criterion against the signed response. Each
    verdict is `MET`, `NOT_MET` or `UNCLEAR`, with a verbatim quote that must appear in the response.
    Code maps the verdicts: any `UNCLEAR` or unconfirmed payment → `VOID`; any `NOT_MET` → `REFUND`;
-   all `MET` → `DELIVERED`. The status changes only after the judgment finalizes.
-6. **Refund.** For a finalized `REFUND`, the relayer calls `RefundEscrow.refund`, which pays the buyer
+   all `MET` → `DELIVERED`. A payment Base has not confirmed yet, or an RPC outage, is not a verdict:
+   the case stays `FILED` with the attempt logged and can be retried.
+6. **Refund.** For a `REFUND` whose judging transaction is FINALIZED on GenLayer, the relayer calls `RefundEscrow.refund`, which pays the buyer
    the full 0.001 USDC from the seller's bond, once per case, and records the GenLayer transaction.
 7. **Closing the loop.** Anyone calls `record_payout` on `RefundCourt`. Validators read the Base
    receipt and confirm the escrow's `Refunded` event and USDC transfer match the case (case key,

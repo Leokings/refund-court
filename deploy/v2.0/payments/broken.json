@@ -1,0 +1,9 @@
+{
+  "request": "{\"buyer\":\"0x73b0ecfeb63544ce24a265d27dcd9281013e4829\",\"city\":\"Lagos\",\"endpoint\":\"https://refund-court-x402.vercel.app/api/weather/broken\",\"delivered_at\":1795201996,\"nonce\":\"8cb7d376-55aa-4a26-84bd-b76c8d0b41e3\"}",
+  "response": "{\"city\":\"Lagos\",\"temperature\":84.2,\"unit\":\"F\",\"observed_at\":1795194000,\"source\":\"Open-Meteo (open-meteo.com), live\"}",
+  "payment_hash": "0x7ad4372ec1534013c8262c5e8f2e9c5fa595dfb02be58133d6b7e69f0fa05952",
+  "signature": "0x69c1975f38a54e33357bd221ad736abf9f5a746bdbd7b4910ccd04838cb2eafc730d30093883e694ed050beb551138b1d8964a8a923d29946905fb06ad9826711b",
+  "evidence_sha256": "9f601752da5e5a5e474bd4e31b7a04de00940fafe28916edeec38607ed8e537a",
+  "capturedAt": "2026-11-20T19:13:17.026Z",
+  "settlementHeader": "eyJzdWNjZXNzIjp0cnVlLCJwYXllciI6IjB4NzNCMGVDRmViNjM1NDRDRTI0YTI2NWQyN2RjRDkyODEwMTNFNDgyOSIsInRyYW5zYWN0aW9uIjoiMHg3YWQ0MzcyZWMxNTM0MDEzYzgyNjJjNWU4ZjJlOWM1ZmE1OTVkZmIwMmJlNTgxMzNkNmI3ZTY5ZjBmYTA1OTUyIiwibmV0d29yayI6ImVpcDE1NTo4NDUzMiJ9"
+}
